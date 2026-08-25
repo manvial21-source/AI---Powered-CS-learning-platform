@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #F8F7F2;
+    color: #2D3748;
+  }
+}
+
+.font-handwriting {
+  font-family: 'Patrick Hand', cursive;
+}
