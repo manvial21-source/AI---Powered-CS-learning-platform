@@ -9,7 +9,7 @@ import {
   Zap,
   HelpCircle,
   ArrowRight,
-  
+  Gauge,
 } from 'lucide-react';
 
 type Language = 'cpp' | 'java' | 'python' | 'javascript';
@@ -98,7 +98,7 @@ const ALGORITHM_CODES: Record<AlgorithmKey, Record<Language, AlgorithmCode>> = {
         1: 'Outer iteration for tracking sorted tail.',
         2: 'Inner pointer j walking adjacent pairs.',
         3: 'Compares arr[j] against arr[j+1].',
-        4: 'Destructuring array swap in JS.',
+        4: 'Destructuring array swap in JavaScript.',
       },
     },
   },
@@ -247,7 +247,7 @@ const ALGORITHM_CODES: Record<AlgorithmKey, Record<Language, AlgorithmCode>> = {
         '}',
       ],
       lineExplanations: {
-        1: 'Walks each unsorted card/item.',
+        1: 'Walks each unsorted item.',
         2: 'Extracts value into key variable.',
         4: 'Shifts larger elements rightward.',
         8: 'Drops key into its final sorted position.',
@@ -403,6 +403,258 @@ const generateBubbleSortFrames = (initial: number[]): VisualizerFrame[] => {
   return frames;
 };
 
+const generateSelectionSortFrames = (initial: number[]): VisualizerFrame[] => {
+  const frames: VisualizerFrame[] = [];
+  const arr = [...initial];
+  const n = arr.length;
+  const sortedIndices: number[] = [];
+
+  frames.push({
+    array: [...arr],
+    comparing: [],
+    swapped: [],
+    sorted: [],
+    activeLine: 1,
+    explanation: 'Starting Selection Sort: Finding the minimum element for each position.',
+  });
+
+  for (let i = 0; i < n - 1; i++) {
+    let minIdx = i;
+    frames.push({
+      array: [...arr],
+      comparing: [i],
+      swapped: [],
+      sorted: [...sortedIndices],
+      activeLine: 2,
+      explanation: `Set candidate minimum minIdx = ${i} (value: ${arr[i]}).`,
+    });
+
+    for (let j = i + 1; j < n; j++) {
+      frames.push({
+        array: [...arr],
+        comparing: [minIdx, j],
+        swapped: [],
+        sorted: [...sortedIndices],
+        activeLine: 3,
+        explanation: `Comparing arr[${j}] (${arr[j]}) with current min arr[${minIdx}] (${arr[minIdx]}).`,
+      });
+
+      if (arr[j] < arr[minIdx]) {
+        const prevMin = minIdx;
+        minIdx = j;
+        frames.push({
+          array: [...arr],
+          comparing: [minIdx],
+          swapped: [],
+          sorted: [...sortedIndices],
+          activeLine: 4,
+          explanation: `New minimum found at index ${j} (value: ${arr[j]}).`,
+          variableDiff: [{ varName: 'minIdx', prev: prevMin.toString(), next: minIdx.toString() }],
+        });
+      }
+    }
+
+    if (minIdx !== i) {
+      const prevI = arr[i];
+      const prevMin = arr[minIdx];
+      const temp = arr[minIdx];
+      arr[minIdx] = arr[i];
+      arr[i] = temp;
+
+      frames.push({
+        array: [...arr],
+        comparing: [],
+        swapped: [i, minIdx],
+        sorted: [...sortedIndices],
+        activeLine: 6,
+        explanation: `Swapped minimum element ${prevMin} into position ${i}.`,
+        variableDiff: [
+          { varName: `arr[${i}]`, prev: prevI.toString(), next: arr[i].toString() },
+          { varName: `arr[${minIdx}]`, prev: prevMin.toString(), next: arr[minIdx].toString() },
+        ],
+      });
+    }
+
+    sortedIndices.push(i);
+  }
+  sortedIndices.push(n - 1);
+
+  frames.push({
+    array: [...arr],
+    comparing: [],
+    swapped: [],
+    sorted: Array.from({ length: n }, (_, i) => i),
+    activeLine: 1,
+    explanation: 'Selection Sort completed successfully!',
+  });
+
+  return frames;
+};
+
+const generateInsertionSortFrames = (initial: number[]): VisualizerFrame[] => {
+  const frames: VisualizerFrame[] = [];
+  const arr = [...initial];
+  const n = arr.length;
+  const sortedIndices: number[] = [0];
+
+  frames.push({
+    array: [...arr],
+    comparing: [],
+    swapped: [],
+    sorted: [0],
+    activeLine: 1,
+    explanation: 'Starting Insertion Sort: First element is trivially sorted.',
+  });
+
+  for (let i = 1; i < n; i++) {
+    const key = arr[i];
+    let j = i - 1;
+
+    frames.push({
+      array: [...arr],
+      comparing: [i],
+      swapped: [],
+      sorted: [...sortedIndices],
+      activeLine: 2,
+      explanation: `Selected key = arr[${i}] (${key}) to insert into sorted partition.`,
+      variableDiff: [{ varName: 'key', prev: 'undefined', next: key.toString() }],
+    });
+
+    while (j >= 0 && arr[j] > key) {
+      frames.push({
+        array: [...arr],
+        comparing: [j, j + 1],
+        swapped: [],
+        sorted: [...sortedIndices],
+        activeLine: 4,
+        explanation: `arr[${j}] (${arr[j]}) > key (${key}). Shifting ${arr[j]} rightward.`,
+      });
+
+      const prevNext = arr[j + 1];
+      arr[j + 1] = arr[j];
+      frames.push({
+        array: [...arr],
+        comparing: [],
+        swapped: [j + 1],
+        sorted: [...sortedIndices],
+        activeLine: 5,
+        explanation: `Shifted arr[${j}] to index ${j + 1}.`,
+        variableDiff: [{ varName: `arr[${j + 1}]`, prev: prevNext.toString(), next: arr[j + 1].toString() }],
+      });
+
+      j = j - 1;
+    }
+
+    arr[j + 1] = key;
+    sortedIndices.push(i);
+
+    frames.push({
+      array: [...arr],
+      comparing: [],
+      swapped: [j + 1],
+      sorted: [...sortedIndices],
+      activeLine: 8,
+      explanation: `Placed key (${key}) into slot ${j + 1}.`,
+    });
+  }
+
+  frames.push({
+    array: [...arr],
+    comparing: [],
+    swapped: [],
+    sorted: Array.from({ length: n }, (_, i) => i),
+    activeLine: 1,
+    explanation: 'Insertion Sort complete!',
+  });
+
+  return frames;
+};
+
+const generateBinarySearchFrames = (initial: number[], target: number): VisualizerFrame[] => {
+  const frames: VisualizerFrame[] = [];
+  const arr = [...initial].sort((a, b) => a - b);
+  let left = 0;
+  let right = arr.length - 1;
+  let foundIndex = -1;
+
+  frames.push({
+    array: [...arr],
+    comparing: [],
+    swapped: [],
+    sorted: [],
+    activeLine: 1,
+    explanation: `Starting Binary Search for target ${target} on sorted array.`,
+  });
+
+  while (left <= right) {
+    const mid = Math.floor(left + (right - left) / 2);
+
+    frames.push({
+      array: [...arr],
+      comparing: [mid],
+      swapped: [],
+      sorted: [left, right],
+      activeLine: 3,
+      explanation: `Calculated midpoint: index ${mid} (value: ${arr[mid]}). Search window [${left}, ${right}].`,
+      variableDiff: [
+        { varName: 'left', prev: left.toString(), next: left.toString() },
+        { varName: 'right', prev: right.toString(), next: right.toString() },
+        { varName: 'mid', prev: 'undefined', next: mid.toString() },
+      ],
+    });
+
+    if (arr[mid] === target) {
+      foundIndex = mid;
+      frames.push({
+        array: [...arr],
+        comparing: [],
+        swapped: [],
+        sorted: [mid],
+        activeLine: 4,
+        explanation: `Target ${target} found at index ${mid}!`,
+      });
+      break;
+    } else if (arr[mid] < target) {
+      const prevLeft = left;
+      left = mid + 1;
+      frames.push({
+        array: [...arr],
+        comparing: [mid],
+        swapped: [],
+        sorted: [],
+        activeLine: 5,
+        explanation: `arr[${mid}] (${arr[mid]}) < ${target}. Target is in right partition. Shifting left pointer.`,
+        variableDiff: [{ varName: 'left', prev: prevLeft.toString(), next: left.toString() }],
+      });
+    } else {
+      const prevRight = right;
+      right = mid - 1;
+      frames.push({
+        array: [...arr],
+        comparing: [mid],
+        swapped: [],
+        sorted: [],
+        activeLine: 6,
+        explanation: `arr[${mid}] (${arr[mid]}) > ${target}. Target is in left partition. Shifting right pointer.`,
+        variableDiff: [{ varName: 'right', prev: prevRight.toString(), next: right.toString() }],
+      });
+    }
+  }
+
+  if (foundIndex === -1) {
+    frames.push({
+      array: [...arr],
+      comparing: [],
+      swapped: [],
+      sorted: [],
+      activeLine: 8,
+      explanation: `Target ${target} does not exist in the array (returned -1).`,
+    });
+  }
+
+  return frames;
+};
+
 export const Visualizer = () => {
   const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmKey>('bubble');
   const [selectedLang, setSelectedLang] = useState<Language>('java');
@@ -411,20 +663,34 @@ export const Visualizer = () => {
   const [frames, setFrames] = useState<VisualizerFrame[]>([]);
   const [currentFrameIdx, setCurrentFrameIdx] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [speed ] = useState<number>(600);
+  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1.0);
   const [hoveredLineNum, setHoveredLineNum] = useState<number | null>(null);
 
   const timerRef = useRef<number | null>(null);
 
+  // Generate Frames on Algorithm or Array Change
   useEffect(() => {
-    const generated = generateBubbleSortFrames(initialArray);
+    let generated: VisualizerFrame[] = [];
+    if (selectedAlgo === 'bubble') {
+      generated = generateBubbleSortFrames(initialArray);
+    } else if (selectedAlgo === 'selection') {
+      generated = generateSelectionSortFrames(initialArray);
+    } else if (selectedAlgo === 'insertion') {
+      generated = generateInsertionSortFrames(initialArray);
+    } else if (selectedAlgo === 'binarySearch') {
+      const target = initialArray[Math.floor(initialArray.length / 2)] || 32;
+      generated = generateBinarySearchFrames(initialArray, target);
+    }
+
     setFrames(generated);
     setCurrentFrameIdx(0);
     setIsPlaying(false);
   }, [initialArray, selectedAlgo]);
 
+  // Handle Playback Interval using Speed Multiplier
   useEffect(() => {
     if (isPlaying) {
+      const delayMs = Math.round(500 / speedMultiplier);
       timerRef.current = window.setInterval(() => {
         setCurrentFrameIdx((prev) => {
           if (prev < frames.length - 1) {
@@ -434,14 +700,14 @@ export const Visualizer = () => {
             return prev;
           }
         });
-      }, speed);
+      }, delayMs);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying, frames, speed]);
+  }, [isPlaying, frames, speedMultiplier]);
 
   const currentFrame = frames[currentFrameIdx] || {
     array: initialArray,
@@ -472,18 +738,20 @@ export const Visualizer = () => {
 
   return (
     <div className="space-y-8">
-      {/* 1. Big Standalone Main Header */}
+      {/* 1. Standalone Top Main Header */}
       <div className="space-y-2">
-        
-        <h1 className="font-ROMAN text-4xl lg:text-5xl font-bold text-[#1E293B] dark:text-slate-100 tracking-tight">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E3EEE7] dark:bg-emerald-950/60 text-[#1E4D40] dark:text-emerald-300 text-xs font-bold shadow-xs">
+          <Sparkles size={14} /> Interactive Algorithm Studio
+        </div>
+        <h1 className="font-handwriting text-4xl lg:text-5xl font-bold text-[#1E293B] dark:text-slate-100 tracking-tight">
           DSA Visualizer
         </h1>
         <p className="text-sm text-[#64748B] dark:text-slate-400 max-w-2xl">
-          Watch data structures and algorithms execute step-by-step in your preferred programming language, with real-time memory mutation traces.
+          Watch data structures and algorithms execute step-by-step in your preferred programming language with real-time memory mutation traces.
         </p>
       </div>
 
-      {/* 2. Controls & Language Bar Section */}
+      {/* 2. Top Navigation & Selection Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-[#ECEAE0] dark:border-slate-800 p-4 rounded-3xl shadow-xs">
         {/* Algorithm Tabs */}
         <div className="flex items-center gap-2">
@@ -526,7 +794,7 @@ export const Visualizer = () => {
         </div>
       </div>
 
-      {/* 3. Main Split Section: Animation Canvas & Live Code */}
+      {/* 3. Main Split Section: Animation Canvas & Live Synchronized Code */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left 7 Columns: Visual Canvas & Playback */}
         <div className="lg:col-span-7 space-y-4">
@@ -543,7 +811,7 @@ export const Visualizer = () => {
               </span>
             </div>
 
-            {/* Bars */}
+            {/* Array Bars */}
             <div className="flex items-end justify-center gap-3.5 h-48 px-4 pb-2 border-b border-[#ECEAE2] dark:border-slate-800">
               {currentFrame.array.map((val, idx) => {
                 const isComparing = currentFrame.comparing.includes(idx);
@@ -582,13 +850,14 @@ export const Visualizer = () => {
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> Swapping
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#2C8562] dark:bg-emerald-500" /> Sorted
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2C8562] dark:bg-emerald-500" /> Settled / Target
               </span>
             </div>
           </div>
 
-          {/* Controls Bar */}
+          {/* Controls & Sliding Speed Bar Panel */}
           <div className="bg-white dark:bg-slate-900 border border-[#ECEAE0] dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            {/* Playback Buttons */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
@@ -631,13 +900,34 @@ export const Visualizer = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Speed Range Slider (0.25x to 2.0x) */}
+            <div className="flex items-center gap-3 bg-[#FAF8F3] dark:bg-slate-800 px-3.5 py-1.5 rounded-2xl border border-[#ECEAE0] dark:border-slate-700">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#64748B] dark:text-slate-400">
+                <Gauge size={14} className="text-[#1E4D40] dark:text-emerald-400" />
+                <span>Speed:</span>
+                <span className="font-mono text-[#1E4D40] dark:text-emerald-300 font-extrabold w-10 text-right">
+                  {speedMultiplier.toFixed(2)}x
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.25"
+                max="2.0"
+                step="0.25"
+                value={speedMultiplier}
+                onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))}
+                className="w-24 accent-[#1E4D40] dark:accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Array Customization */}
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
                 placeholder="e.g. 10, 4, 8"
-                className="bg-[#FAF8F3] dark:bg-slate-800 border border-[#ECEAE0] dark:border-slate-700 text-xs text-[#2D3748] dark:text-slate-200 rounded-xl px-2.5 py-1.5 w-36 focus:outline-none"
+                className="bg-[#FAF8F3] dark:bg-slate-800 border border-[#ECEAE0] dark:border-slate-700 text-xs text-[#2D3748] dark:text-slate-200 rounded-xl px-2.5 py-1.5 w-28 focus:outline-none"
               />
               <button
                 onClick={handleApplyCustomArray}
