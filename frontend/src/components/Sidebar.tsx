@@ -1,22 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  BookOpen,
   Bot,
   BarChart3,
   Code2,
-  FileText,
   HelpCircle,
   Sparkles,
 } from 'lucide-react';
 
 const coreModules = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'Learn Concepts', path: '/learn', icon: BookOpen },
   { name: 'AI Tutor', path: '/tutor', icon: Bot },
   { name: 'DSA Visualizer', path: '/visualizer', icon: BarChart3 },
   { name: 'Code Runner', path: '/editor', icon: Code2 },
-  { name: 'PDF Assistant', path: '/pdf-chat', icon: FileText },
   { name: 'Quiz', path: '/quiz', icon: HelpCircle },
   { name: 'Recommendations', path: '/recommendations', icon: Sparkles },
 ];
